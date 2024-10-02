@@ -105,3 +105,82 @@ num_ada_A = nrow(nyc_transit_df |>
                          filter(ada == TRUE) |> distinct(line, station_name))
 ```
 `r num_ada_A` of the stations that serve the A train are ADA compliant.
+
+# Problem 2
+
+## Import, tidy and merge Trash Wheel datasets:
+```{r import_merge_trash_data}
+
+mr_trash_df = 
+  readxl::read_excel(
+    "./data/202409 Trash Wheel Collection Data.xlsx",
+    sheet = "Mr. Trash Wheel",
+    range = "A2:N653",
+    na = "") |>
+  janitor::clean_names() |>
+  mutate(
+    year = as.numeric(year),
+    sports_balls = as.integer(round(sports_balls)),
+    trash_wheel = "Mr.") |>
+  relocate(trash_wheel)
+
+prof_trash_df = 
+  readxl::read_excel(
+    "./data/202409 Trash Wheel Collection Data.xlsx",
+    sheet = "Professor Trash Wheel",
+    range = "A2:M120",
+    na = "") |>
+  janitor::clean_names() |>
+  mutate(
+    year = as.numeric(year),
+    sports_balls = NA,
+    trash_wheel = "Professor") |>
+  relocate(trash_wheel)
+
+gwynnda_trash_df = 
+  readxl::read_excel(
+    "./data/202409 Trash Wheel Collection Data.xlsx",
+    sheet = "Gwynnda Trash Wheel",
+    range = "A2:L265") |>
+  janitor::clean_names() |>
+  mutate(
+    year = as.numeric(year),
+    sports_balls = NA,
+    glass_bottles = NA,
+    trash_wheel = "Gwynnda") |>
+  relocate(trash_wheel)
+
+merged_trash_df = rbind(mr_trash_df, prof_trash_df, gwynnda_trash_df)
+str(merged_trash_df)
+
+```
+
+The dataset has `r nrow(merged_trash_df)` rows and `r ncol(merged_trash_df)` 
+columns. Important variables include the weight (tons) and volume (cubic yards) 
+of trash collected, date and homes powered. The dataset also includes the types 
+and respective quantities of trash collected, such as plastic bottles, 
+polystyrene, cigarette butts, glass bottles, plastic bags, wrappers and sports 
+balls. 
+
+The total trash collected by Mr. Trash Wheel, Professor Trash Wheel and Gwynnda 
+is `r round(sum(pull(merged_trash_df, weight_tons)), 2)` tons and 
+`r round(sum(pull(merged_trash_df, volume_cubic_yards)), 2)` cubic yards, powering 
+a total of `r round(sum(pull(merged_trash_df, homes_powered), na.rm=TRUE))` homes. 
+
+### What was the total weight of trash collected by Professor Trash Wheel?
+```{r professor_trash_weight}
+prof_total_trash = sum(merged_trash_df |> 
+                              filter(trash_wheel == "Professor") |> 
+                              pull(weight_tons))
+```
+Professor Trash Wheel collected `r prof_total_trash` tons of trash in total. 
+
+### What was the total number of cigarette butts collected by Gwynnda in June of 2022?
+```{r}
+gwynnda_june_cigs = sum(merged_trash_df |> 
+                           filter(trash_wheel == "Gwynnda") |> 
+                           filter(month == "June") |> 
+                           filter(year == 2022) |> 
+                           pull(cigarette_butts))
+```
+Gwynnda collected `r gwynnda_june_cigs` cigarette butts in June of 2022. 
