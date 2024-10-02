@@ -184,3 +184,137 @@ gwynnda_june_cigs = sum(merged_trash_df |>
                            pull(cigarette_butts))
 ```
 Gwynnda collected `r gwynnda_june_cigs` cigarette butts in June of 2022. 
+
+# Problem 3
+
+## Import and tidy Great British Bake Off (GBB) datasets:
+``` {r import_gbb_data}
+
+bakers_df = 
+  read_csv("./data/gbb_datasets/bakers.csv") |>
+  janitor::clean_names() |>
+  separate(baker_name, into = c("baker", "last_name"), sep = " ") |>
+  mutate(
+    baker = replace(baker, baker == "Jo", "Joanne")
+  )
+
+bakes_df = 
+  read_csv(
+    "./data/gbb_datasets/bakes.csv",
+    na = c("N/A", "UNKNOWN", "Unknown")) |>
+  janitor::clean_names() |>
+  mutate(
+    baker = replace(baker, baker == '"Jo"', "Joanne")
+  )
+
+results_df = 
+  read_csv(
+    "./data/gbb_datasets/results.csv",
+    na = c("NA", ""), 
+    skip = 2) |>
+  janitor::clean_names()
+
+``` 
+
+After examining all the datasets, the NA values were defined when reading the 
+csv files and column names were cleaned using the clean_names function of the 
+janitor library. There is a contestant named Joanne, who was represented 
+differently as Jo and "Jo" in the bakers and bakes datasets respectively. Those 
+values were subsequently replaced to Joanne for consistency.
+
+When reading the csv of the results dataset, the first two lines were skipped 
+since they didn't contain relevant information. For the bakers dataset, the 
+baker_name variable was separated into two distinct columns, baker and last_name 
+since we need to merge all three datasets, given that the bakes and results 
+datasets only included the the bakers' first names in a column called baker.  
+
+## Merge and export GBB datasets:
+```{r merge_export_gbb}
+
+merged_gbb_df = 
+  left_join(results_df, bakes_df, 
+            by = join_by(series, episode, baker)) |>
+  left_join(bakers_df, by = join_by(series, baker)) |> 
+  relocate(last_name, .after = baker) |>
+  relocate(signature_bake, .before = technical) |>
+  relocate(show_stopper, .before = result)
+
+anti_join(results_df, merged_gbb_df,
+          by = join_by(series, episode, baker, technical, result))
+
+anti_join(bakes_df, merged_gbb_df,
+          by = join_by(series, episode, baker, signature_bake,show_stopper))
+
+anti_join(bakers_df, merged_gbb_df, 
+          by = join_by(baker, last_name, series, 
+                       baker_age,baker_occupation, hometown))
+
+write.csv(merged_gbb_df, "merged_gbb.csv", row.names = FALSE)
+str(merged_gbb_df)
+```
+
+After merging the datasets, check for completeness and correctness was performed 
+by using the anti_join function on each of the dataset with the merged dataset. 
+As shown above, each of the anti_join function returned an empty dataframe, 
+indicating that none of the data were omitted. 
+
+The final dataset has `r nrow(merged_gbb_df)` rows and `r ncol(merged_gbb_df)` 
+columns. It includes the series, episode, technical and baker age as numerical 
+variables with baker (first name), last name, signature bake, show stopper, 
+occupation and hometown as character variables. 
+
+## Create star baker table:
+```{r create_starbaker_dataframe}
+
+star_baker_table = merged_gbb_df |>
+  filter(result %in% c("STAR BAKER", "WINNER")) |>
+  filter(series %in% c(5:10)) |> 
+  arrange(series, episode) |>
+  select(episode, baker, series) |>
+  pivot_wider(
+    names_from = "series",
+    values_from = "baker"  ) |>
+  rename("series 5" = "5",
+         "series 6" = "6",
+         "series 7" = "7",
+         "series 8" = "8",
+         "series 9" = "9",
+         "series 10" = "10") |>
+  knitr::kable()
+
+star_baker_table
+
+```
+
+### Were there any predictable overall winners? Any surprises?
+
+The following contestants had the most titles for star baker before episode 10 
+(the final episode) and were predicted to win:
+
+* Richard (3 times for series 5)
+* Either Ian or Nadiya (3 times each for series 6), 
+* Candice (3 times for series 7)
+* Steven (3 times for series 8)
+* Either Rahul, Kim-Joy or Ruby (2 times each for series 9)
+* Steph (4 times for series 10).
+
+As shown in the table, for series 6, 7 and 9, Nadiya, Candice and Rahul won 
+respectively. As a surprise, Nancy, Sophie, and David won series 5, 8, and 10 
+respectively. 
+
+## Import and tidy viewership dataset:
+```{r import_viewership_data}
+
+viewership_df =
+  read_csv("./data/gbb_datasets/viewers.csv",
+           na = "NA") |>
+  janitor::clean_names()
+
+head(viewership_df, 10)
+
+```
+
+### What was the average viewership in Season 1? In Season 5?
+The average viewership of seasons 1 and 5 were 
+`r mean(pull(viewership_df,series_1), na.rm = TRUE)` and 
+`r round(mean(pull(viewership_df,series_5), na.rm = TRUE), 2)` respectively.
