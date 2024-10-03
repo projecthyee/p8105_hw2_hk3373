@@ -226,7 +226,7 @@ When reading the csv of the results dataset, the first two lines were skipped
 since they didn't contain relevant information. For the bakers dataset, the 
 baker_name variable was separated into two distinct columns, baker and last_name 
 since we need to merge all three datasets, given that the bakes and results 
-datasets only included the the bakers' first names in a column called baker.  
+datasets only included the the bakers' first names in a column called baker. 
 
 ## Merge and export GBB datasets:
 ```{r merge_export_gbb}
@@ -249,7 +249,7 @@ anti_join(bakers_df, merged_gbb_df,
           by = join_by(baker, last_name, series, 
                        baker_age,baker_occupation, hometown))
 
-write.csv(merged_gbb_df, "merged_gbb.csv", row.names = FALSE)
+write.csv(merged_gbb_df, "./data/gbb_datasets/merged_gbb.csv", row.names = FALSE)
 str(merged_gbb_df)
 ```
 
