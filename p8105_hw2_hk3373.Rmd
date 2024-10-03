@@ -216,19 +216,7 @@ results_df =
 
 ``` 
 
-After examining all the datasets, the NA values were defined when reading the 
-csv files and column names were cleaned using the clean_names function of the 
-janitor library. There is a contestant named Joanne, who was represented 
-differently as Jo and "Jo" in the bakers and bakes datasets respectively. Those 
-values were subsequently replaced to Joanne for consistency.
-
-When reading the csv of the results dataset, the first two lines were skipped 
-since they didn't contain relevant information. For the bakers dataset, the 
-baker_name variable was separated into two distinct columns, baker and last_name 
-since we need to merge all three datasets, given that the bakes and results 
-datasets only included the the bakers' first names in a column called baker. 
-
-## Merge and export GBB datasets:
+## Merge and export GBB dataset:
 ```{r merge_export_gbb}
 
 merged_gbb_df = 
@@ -252,6 +240,18 @@ anti_join(bakers_df, merged_gbb_df,
 write.csv(merged_gbb_df, "./data/gbb_datasets/merged_gbb.csv", row.names = FALSE)
 str(merged_gbb_df)
 ```
+
+After examining all the datasets, the NA values were defined when reading the 
+csv files and column names were cleaned using the clean_names function of the 
+janitor library. There is a contestant named Joanne, who was represented 
+differently as Jo and "Jo" in the bakers and bakes datasets respectively. Those 
+values were subsequently replaced to Joanne for consistency.
+
+When reading the csv of the results dataset, the first two lines were skipped 
+since they didn't contain relevant information. For the bakers dataset, the 
+baker_name variable was separated into two distinct columns, baker and last_name 
+since we need to merge all three datasets, given that the bakes and results 
+datasets only included the the bakers' first names in a column called baker. 
 
 After merging the datasets, check for completeness and correctness was performed 
 by using the anti_join function on each of the dataset with the merged dataset. 
